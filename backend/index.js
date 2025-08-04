@@ -22,6 +22,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Allow requests in development (no origin) and from your deployed frontend URLs
     if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
@@ -38,6 +39,7 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB connection successful."))
   .catch(err => console.error("MongoDB connection error:", err));
 
+// This uses MongoDB to store sessions, fixing the MemoryStore warning
 app.use(session({
   secret: process.env.SESSION_SECRET || 'a-very-strong-secret-for-your-college-project',
   resave: false,
@@ -174,16 +176,8 @@ app.post('/api/trade', isAuthenticated, async (req, res) => {
     }
 });
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../frontend/build')));
-    app.use('/dashboard', express.static(path.join(__dirname, '../dashboard/build')));
-    app.get('/dashboard/*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '..', 'dashboard', 'build', 'index.html'));
-    });
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '..', 'frontend', 'build', 'index.html'));
-    });
-}
+// The block for serving static files in production has been removed.
+// Render's Static Site services will handle this.
 
 app.listen(port, () => {
   console.log(`Zerodha Clone Backend listening on http://localhost:${port}`);

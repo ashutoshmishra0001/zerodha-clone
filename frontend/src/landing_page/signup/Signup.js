@@ -13,7 +13,7 @@ function Signup() {
         setError('');
         try {
             await register(username, email, password);
-           window.location.href = 'https://zerodha-clone-dashboard.onrender.com';
+           window.location.href = 'https://zerodha-clone-dashboard-79yj.onrender.com';
         } catch (err) {
             setError(err.response?.data?.error || 'Signup failed. Username or email may be taken.');
         }

@@ -11,7 +11,7 @@ const ProtectedRoute = ({ children }) => {
     }
 
     if (!user) {
-        window.location.href = 'https://zerodha-clone-frontend.onrender.com/login';
+        window.location.href = 'https://zerodha-clone-frontend-dyrl.onrender.com/login';
         return null;
     }
 

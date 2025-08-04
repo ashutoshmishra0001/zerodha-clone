@@ -12,7 +12,7 @@ function Login() {
         setError('');
         try {
             await login(username, password);
-            window.location.href = 'https://zerodha-clone-dashboard.onrender.com';
+            window.location.href = 'https://zerodha-clone-dashboard-79yj.onrender.com';
         } catch (err) {
             setError('Invalid username or password.');
         }

@@ -1,35 +1,56 @@
-import React, { useState } from "react";
-
+import React, { useState, createContext, useContext, useEffect } from "react";
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 import BuyActionWindow from "./BuyActionWindow";
 
-const GeneralContext = React.createContext({
-  openBuyWindow: (uid) => {},
-  closeBuyWindow: () => {},
-});
+const GeneralContext = createContext();
 
-export const GeneralContextProvider = (props) => {
-  const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
-  const [selectedStockUID, setSelectedStockUID] = useState("");
+export const GeneralContextProvider = ({ children }) => {
+  const { user } = useContext(AuthContext);
+  const [isTradeWindowOpen, setIsTradeWindowOpen] = useState(false);
+  const [tradeStock, setTradeStock] = useState({ uid: "", mode: "BUY" });
+  const [holdings, setHoldings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleOpenBuyWindow = (uid) => {
-    setIsBuyWindowOpen(true);
-    setSelectedStockUID(uid);
+  const fetchHoldings = async () => {
+    if (!user) return;
+    try {
+      setIsLoading(true);
+      const res = await axios.get("/api/holdings");
+      setHoldings(res.data);
+    } catch (err) {
+      console.error("Failed to fetch holdings:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleCloseBuyWindow = () => {
-    setIsBuyWindowOpen(false);
-    setSelectedStockUID("");
+  useEffect(() => {
+    fetchHoldings();
+  }, [user]);
+
+  const openTradeWindow = (uid, mode = "BUY") => {
+    setTradeStock({ uid, mode });
+    setIsTradeWindowOpen(true);
+  };
+
+  const closeTradeWindow = () => {
+    setIsTradeWindowOpen(false);
+    setTradeStock({ uid: "", mode: "BUY" });
   };
 
   return (
     <GeneralContext.Provider
       value={{
-        openBuyWindow: handleOpenBuyWindow,
-        closeBuyWindow: handleCloseBuyWindow,
+        openTradeWindow,
+        closeTradeWindow,
+        holdings,
+        isLoading,
+        fetchHoldings,
       }}
     >
-      {props.children}
-      {isBuyWindowOpen && <BuyActionWindow uid={selectedStockUID} />}
+      {children}
+      {isTradeWindowOpen && <BuyActionWindow uid={tradeStock.uid} mode={tradeStock.mode} />}
     </GeneralContext.Provider>
   );
 };

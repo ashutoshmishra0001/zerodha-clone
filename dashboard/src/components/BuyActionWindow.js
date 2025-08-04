@@ -1,70 +1,56 @@
-import React, { useState, useContext }from "react";
-import { Link } from "react-router-dom";
-
+import React, { useState, useContext } from "react";
 import axios from "axios";
-
 import GeneralContext from "./GeneralContext";
-
 import "./BuyActionWindow.css";
 
-const BuyActionWindow = ({ uid }) => {
+const BuyActionWindow = ({ uid, mode }) => {
   const [stockQuantity, setStockQuantity] = useState(1);
-  const [stockPrice, setStockPrice] = useState(0.0);
+  const [stockPrice, setStockPrice] = useState(100.00);
+  const { closeTradeWindow, fetchHoldings } = useContext(GeneralContext);
 
-  const { closeBuyWindow } = useContext(GeneralContext);
-
-  const handleBuyClick = () => {
-    axios.post("http://localhost:3002/newOrder", {
+  const handleTrade = () => {
+    axios.post("/api/trade", {
       name: uid,
       qty: stockQuantity,
       price: stockPrice,
-      mode: "BUY",
+      mode: mode,
+    })
+    .then(() => {
+      fetchHoldings();
+      closeTradeWindow();
+    })
+    .catch(err => {
+      console.error("Trade failed:", err);
+      alert(err.response?.data?.message || "Trade could not be completed.");
     });
-
-    closeBuyWindow();
-  };
-
-  const handleCancelClick = () => {
-    closeBuyWindow();
   };
 
   return (
-    <div className="container" id="buy-window" draggable="true">
+    <div className="container" id="buy-window">
+      <div className="header" style={{ backgroundColor: mode === 'BUY' ? '#4184f3' : '#ff5722' }}>
+          <h3>{mode} {uid} <span className="exchange">NSE</span></h3>
+      </div>
       <div className="regular-order">
         <div className="inputs">
           <fieldset>
             <legend>Qty.</legend>
-            <input
-              type="number"
-              name="qty"
-              id="qty"
-              onChange={(e) => setStockQuantity(e.target.value)}
-              value={stockQuantity}
-            />
+            <input type="number" name="qty" id="qty" min="1" onChange={(e) => setStockQuantity(e.target.value)} value={stockQuantity} />
           </fieldset>
           <fieldset>
             <legend>Price</legend>
-            <input
-              type="number"
-              name="price"
-              id="price"
-              step="0.05"
-              onChange={(e) => setStockPrice(e.target.value)}
-              value={stockPrice}
-            />
+            <input type="number" name="price" id="price" step="0.05" onChange={(e) => setStockPrice(e.target.value)} value={stockPrice} />
           </fieldset>
         </div>
       </div>
-
       <div className="buttons">
-        <span>Margin required ₹140.65</span>
+        <span>Margin required: ₹{(stockQuantity * stockPrice).toFixed(2)}</span>
         <div>
-          <Link className="btn btn-blue" onClick={handleBuyClick}>
-            Buy
-          </Link>
-          <Link to="" className="btn btn-grey" onClick={handleCancelClick}>
+          <button className="btn" style={{ backgroundColor: mode === 'BUY' ? '#4184f3' : '#ff5722' }} onClick={handleTrade}>
+            {mode}
+          </button>
+          <button className="btn btn-grey" onClick={closeTradeWindow}>
             Cancel
-          </Link>
+          </button>
         </div>
       </div>
     </div>

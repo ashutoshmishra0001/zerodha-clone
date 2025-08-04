@@ -5,6 +5,7 @@ const OrdersSchema = new Schema({
   qty: Number,
   price: Number,
   mode: String,
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 module.exports = { OrdersSchema };

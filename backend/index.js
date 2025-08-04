@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
+const MongoStore = require('connect-mongo');
 const dotenv = require("dotenv");
 const path = require('path');
 const passportLocalMongoose = require('passport-local-mongoose');
@@ -14,16 +15,14 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3002;
 
-
 const allowedOrigins = [
-    process.env.FRONTEND_URL, 
-    process.env.DASHBOARD_URL 
+    process.env.FRONTEND_URL,
+    process.env.DASHBOARD_URL
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -34,22 +33,25 @@ app.use(cors({
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+mongoose.connect(process.env.MONGO_URL)
+  .then(() => console.log("MongoDB connection successful."))
+  .catch(err => console.error("MongoDB connection error:", err));
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'a-very-strong-secret-for-your-college-project',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URL }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
-
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB connection successful."))
-  .catch(err => console.error("MongoDB connection error:", err));
 
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, trim: true },

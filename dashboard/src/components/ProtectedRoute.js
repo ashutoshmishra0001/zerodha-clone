@@ -11,7 +11,10 @@ const ProtectedRoute = ({ children }) => {
     }
 
     if (!user) {
-        window.location.href = 'https://zerodha-clone-frontend-dyrl.onrender.com/login';
+        // This will redirect the user to the main login page if they are not authenticated
+        // window.location.href = 'http://localhost:3000/login'; // For local development
+        // For production, you would use:
+        window.location.href = process.env.REACT_APP_FRONTEND_URL ? `${process.env.REACT_APP_FRONTEND_URL}/login` : 'http://localhost:3000/login';
         return null;
     }
 

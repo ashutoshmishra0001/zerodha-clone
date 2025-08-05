@@ -12,7 +12,8 @@ function Login() {
         setError('');
         try {
             await login(username, password);
-            window.location.href = 'https://zerodha-clone-dashboard-79yj.onrender.com';
+            // Use the environment variable for the dashboard URL
+            window.location.href = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3001';
         } catch (err) {
             setError('Invalid username or password.');
         }

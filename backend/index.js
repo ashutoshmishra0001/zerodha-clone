@@ -15,28 +15,23 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3002;
 
-// --- CORS Configuration ---
 const allowedOrigins = [
-    process.env.FRONTEND_URL,  // e.g., https://zerodha-clone-frontend.onrender.com
-    process.env.DASHBOARD_URL, // e.g., https://zerodha-clone-dashboard.onrender.com
-    'http://localhost:3000',   // For local frontend development
-    'http://localhost:3001'    // For local dashboard development
+    process.env.FRONTEND_URL,
+    process.env.DASHBOARD_URL,
+    'http://localhost:3000',
+    'http://localhost:3001'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    // or if the origin is in our allowed list.
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.error(`CORS Error: The origin ${origin} is not allowed.`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true
 }));
-
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -54,16 +49,13 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,
-    // SameSite attribute is important for cross-domain cookies
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
 
-// This is needed for the sameSite: 'none' cookie setting to work
 if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1);
 }
-
 
 app.use(passport.initialize());
 app.use(passport.session());

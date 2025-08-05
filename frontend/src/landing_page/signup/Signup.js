@@ -13,7 +13,8 @@ function Signup() {
         setError('');
         try {
             await register(username, email, password);
-           window.location.href = 'https://zerodha-clone-dashboard-79yj.onrender.com';
+            // Use the environment variable for the dashboard URL
+            window.location.href = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3001';
         } catch (err) {
             setError(err.response?.data?.error || 'Signup failed. Username or email may be taken.');
         }

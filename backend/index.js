@@ -40,7 +40,8 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB connection successful."))
   .catch(err => console.error("MongoDB connection error:", err));
 
-// This is needed for the sameSite: 'none' cookie setting to work behind a proxy like Render
+// This tells Express to trust the proxy that Render puts in front of your app.
+// It is required for the 'secure' and 'sameSite' cookie settings to work correctly.
 if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1);
 }
@@ -51,10 +52,10 @@ app.use(session({
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: process.env.MONGO_URL }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production', // Cookie will only be sent over HTTPS
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,
-    // This allows the cookie to be sent from different domains
+    // This is the crucial setting that allows the cookie to be sent across different domains.
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));

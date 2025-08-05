@@ -15,22 +15,28 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3002;
 
+// --- CORS Configuration ---
 const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    process.env.DASHBOARD_URL
+    process.env.FRONTEND_URL,  // e.g., https://zerodha-clone-frontend.onrender.com
+    process.env.DASHBOARD_URL, // e.g., https://zerodha-clone-dashboard.onrender.com
+    'http://localhost:3000',   // For local frontend development
+    'http://localhost:3001'    // For local dashboard development
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests in development (no origin) and from your deployed frontend URLs
-    if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    // or if the origin is in our allowed list.
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.error(`CORS Error: The origin ${origin} is not allowed.`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true
 }));
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -39,7 +45,6 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB connection successful."))
   .catch(err => console.error("MongoDB connection error:", err));
 
-// This uses MongoDB to store sessions, fixing the MemoryStore warning
 app.use(session({
   secret: process.env.SESSION_SECRET || 'a-very-strong-secret-for-your-college-project',
   resave: false,
@@ -48,9 +53,17 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
+    maxAge: 24 * 60 * 60 * 1000,
+    // SameSite attribute is important for cross-domain cookies
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
+
+// This is needed for the sameSite: 'none' cookie setting to work
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -175,9 +188,6 @@ app.post('/api/trade', isAuthenticated, async (req, res) => {
         res.status(400).json({ message: 'Invalid trade mode specified.' });
     }
 });
-
-// The block for serving static files in production has been removed.
-// Render's Static Site services will handle this.
 
 app.listen(port, () => {
   console.log(`Zerodha Clone Backend listening on http://localhost:${port}`);

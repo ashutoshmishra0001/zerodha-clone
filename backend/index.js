@@ -40,6 +40,11 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB connection successful."))
   .catch(err => console.error("MongoDB connection error:", err));
 
+// This is needed for the sameSite: 'none' cookie setting to work behind a proxy like Render
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'a-very-strong-secret-for-your-college-project',
   resave: false,
@@ -49,13 +54,10 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,
+    // This allows the cookie to be sent from different domains
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
-
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1);
-}
 
 app.use(passport.initialize());
 app.use(passport.session());
